@@ -18,9 +18,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Prompt is missing' });
     }
 
-    const reply = `Привет! Я получил твое сообщение в Roblox: "${prompt}". Связка работает!`;
+    // Вставляем твой ключ прямо сюда
+    const apiKey = "AQ.Ab8RN6JH5mahUV6_XKchQNno0x4mEhAmlbv2EC6dPixeyD0o5A";
 
-    return res.status(200).json({ answer: reply });
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      return res.status(500).json({ error: data.error.message });
+    }
+
+    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || "Пустой ответ от модели";
+
+    return res.status(200).json({ answer: answer });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
